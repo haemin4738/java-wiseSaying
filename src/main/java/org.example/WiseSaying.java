@@ -1,20 +1,37 @@
 package org.example;
 
-class WiseSaying {
+public class WiseSaying {
     private int id;
-    private String text;
     private String author;
+    private String content;
 
-    public WiseSaying(int id, String text, String author) {
+    WiseSaying(int id, String author, String content) {
         this.id = id;
-        this.text = text;
+        this.author = author;
+        this.content = content;
+    }
+
+    int getId(){
+        return id;
+    }
+
+    String getAuthor() {
+        return author;
+    }
+
+    String getContent() {
+        return content;
+    }
+
+    void setId(int id){
+        this.id = id;
+    }
+
+    void setAuthor(String author){
         this.author = author;
     }
 
-    public int getId() { return id; }
-    public String getText() { return text; }
-    public String getAuthor() { return author; }
-    public void setText(String text) { this.text = text; }
-    public void setAuthor(String author) { this.author = author; }
+    void setContent(String content){
+        this.content = content;
+    }
 }
-
