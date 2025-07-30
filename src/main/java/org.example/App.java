@@ -1,16 +1,18 @@
 package org.example;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class App {
     Scanner scanner = new Scanner(System.in);
-    int lastId = 0;
+    int lastId = loadLastId();
     List<WiseSaying> wiseSayingList = new ArrayList<>();
 
     void run () {
         System.out.println("== 명언 앱 ==");
+        loadAllWiseSayings();
 
         while (true) {
             System.out.print("명령) ");
@@ -40,7 +42,8 @@ public class App {
         String author = scanner.nextLine().trim();
 
         WiseSaying wiseSaying = write(author, content);
-
+        saveWiseSaying(wiseSaying);
+        saveLastId(lastId);
         System.out.println("%d번 명언이 등록되었습니다.".formatted(wiseSaying.getId()));
     }
 
@@ -72,7 +75,7 @@ public class App {
         if (wisesaying == null) {
             return; // ID가 유효하지 않으면 메서드 종료
         }
-
+        deleteWiseSayingFile(id);
         wiseSayingList.remove(wisesaying);
     }
     void actionModify(String cmd) {
@@ -96,7 +99,7 @@ public class App {
 
         wisesaying.setAuthor(author);
         wisesaying.setContent(content);
-
+        saveWiseSaying(wisesaying);
         System.out.println("%d번 명언이 수정되었습니다.".formatted(wisesaying.getId()));
     }
 
@@ -124,5 +127,66 @@ public class App {
             }
         }
         return wiseSaying;
+    }
+
+    void saveWiseSaying(WiseSaying ws) {
+        String path = "db/wiseSaying/" + ws.getId() + ".json";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            writer.write(ws.toJson());
+        } catch (IOException e) {
+            System.out.println("명언 저장 중 오류 발생");
+        }
+    }
+
+    void deleteWiseSayingFile(int id) {
+        String path = "db/wiseSaying/" + id + ".json";
+        File file = new File(path);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    void saveLastId(int lastId) {
+        String path = "db/wiseSaying/lastId.txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            writer.write(String.valueOf(lastId));
+        } catch (IOException e) {
+            System.out.println("lastId 저장 중 오류 발생");
+        }
+    }
+
+    int loadLastId() {
+        String path = "db/wiseSaying/lastId.txt";
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            return Integer.parseInt(reader.readLine());
+        } catch (IOException | NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    WiseSaying loadWiseSaying(int id) {
+        String path = "db/wiseSaying/" + id + ".json";
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String json = reader.readLine();
+            return WiseSaying.fromJson(json);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    void loadAllWiseSayings() {
+        File dir = new File("db/wiseSaying");
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
+        if (files == null) return;
+
+        for (File file : files) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String json = reader.readLine();
+                WiseSaying ws = WiseSaying.fromJson(json);
+                wiseSayingList.add(ws);
+            } catch (IOException e) {
+                System.out.println(file.getName() + " 읽기 오류");
+            }
+        }
     }
 }
