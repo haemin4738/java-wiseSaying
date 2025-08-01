@@ -1,7 +1,8 @@
-package org.example.domain.wiseSaying;
+package com.back.domain.wiseSaying.controller;
 
-import org.example.Rq;
-import org.example.WiseSaying;
+import com.back.Rq;
+import com.back.domain.wiseSaying.service.WiseSayingService;
+import com.back.domain.wiseSaying.entity.WiseSaying;
 
 import java.util.Scanner;
 
@@ -9,6 +10,7 @@ public class WiseSayingController {
 
     private final Scanner scanner;
     private final WiseSayingService wiseSayingService;
+
 
     public WiseSayingController(Scanner scanner) {
         this.scanner = scanner;

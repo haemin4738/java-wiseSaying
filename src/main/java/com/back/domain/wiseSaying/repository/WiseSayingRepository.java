@@ -1,6 +1,6 @@
-package org.example.domain.wiseSaying;
+package com.back.domain.wiseSaying.repository;
 
-import org.example.WiseSaying;
+import com.back.domain.wiseSaying.entity.WiseSaying;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +17,12 @@ public class WiseSayingRepository {
         wiseSayingList.remove(wiseSaying);
     }
 
-    void modify(WiseSaying wiseSaying, String content, String author) {
+    public void modify(WiseSaying wiseSaying, String content, String author) {
         wiseSaying.setContent(content);
         wiseSaying.setAuthor(author);
     }
 
-    WiseSaying findById(int id) {
+    public WiseSaying findById(int id) {
         return wiseSayingList.stream()
                 .filter(ws -> ws.getId() == id)
                 .findFirst()

@@ -1,13 +1,14 @@
-package org.example.domain.wiseSaying;
+package com.back.domain.wiseSaying.service;
 
-import org.example.WiseSaying;
+import com.back.domain.wiseSaying.entity.WiseSaying;
+import com.back.domain.wiseSaying.repository.WiseSayingRepository;
 
 import java.util.List;
 
 public class WiseSayingService {
     private final WiseSayingRepository wiseSayingRepository;
 
-    WiseSayingService() {
+    public WiseSayingService() {
         this.wiseSayingRepository = new WiseSayingRepository();
     }
 
@@ -19,11 +20,11 @@ public class WiseSayingService {
         this.wiseSayingRepository.delete(wiseSaying);
     }
 
-    void modify(WiseSaying wiseSaying, String content, String author) {
+    public void modify(WiseSaying wiseSaying, String content, String author) {
         this.wiseSayingRepository.modify(wiseSaying, content, author);
     }
 
-    WiseSaying findById(int id) {
+    public WiseSaying findById(int id) {
         return this.wiseSayingRepository.findById(id);
     }
 

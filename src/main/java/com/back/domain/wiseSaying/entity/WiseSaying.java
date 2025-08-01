@@ -1,4 +1,4 @@
-package org.example;
+package com.back.domain.wiseSaying.entity;
 
 public class WiseSaying {
     private final  int id;
