@@ -1,236 +1,128 @@
 package org.example;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class App {
-    static final String DB_DIR = "db/wiseSaying";
-    private List<WiseSaying> wiseSayings;
-    private int id;
-    private Scanner scanner;
+    Scanner scanner = new Scanner(System.in);
+    int lastId = 0;
+    List<WiseSaying> wiseSayingList = new ArrayList<>();
 
-    public void run() {
-        wiseSayings = loadAllWiseSayings();
-        id = loadLastId();
-        scanner = new Scanner(System.in);
-
+    void run () {
         System.out.println("== 명언 앱 ==");
 
         while (true) {
-            System.out.print("명령 ) ");
+            System.out.print("명령) ");
             String cmd = scanner.nextLine().trim();
 
             if (cmd.equals("종료")) {
                 System.out.println("프로그램을 종료합니다.");
                 break;
+            } else  if (cmd.equals("등록")) {
+                actionWrite();
+            } else if (cmd.equals("목록")) {
+                actionList();
+            } else if (cmd.startsWith("삭제")) {
+                actionDelete(cmd);
+            } else if (cmd.startsWith("수정")) {
+                actionModify(cmd);
             }
+        }
+        scanner.close();
+    }
 
-            if (cmd.equals("등록")) {
-                handleRegister();
-            }
+    void actionWrite() {
+        System.out.print("명언: ");
+        String content = scanner.nextLine().trim();
 
-            if (cmd.equals("목록")) {
-                handleList();
-            }
+        System.out.print("작가: ");
+        String author = scanner.nextLine().trim();
 
-            if (cmd.startsWith("삭제?id=")) {
-                handleDelete(cmd);
-            }
+        WiseSaying wiseSaying = write(author, content);
 
-            if (cmd.startsWith("수정?id=")) {
-                handleUpdate(cmd);
-            }
+        System.out.println("%d번 명언이 등록되었습니다.".formatted(wiseSaying.getId()));
+    }
 
-            if (cmd.equals("빌드")) {
-                handleBuild();
-            }
+    WiseSaying write (String author, String content) {
+        WiseSaying wiseSaying = new WiseSaying(++lastId, author, content );
+
+        wiseSayingList.add(wiseSaying);
+
+        return wiseSaying;
+    }
+
+    void actionList() {
+        System.out.println("번호 / 작자 / 명언");
+        System.out.println("----------------------");
+
+        for (int i = wiseSayingList.size() - 1; i >=0; i--) {
+            WiseSaying wiseSaying = wiseSayingList.get(i);
+            System.out.println("%d / %s / %s".formatted(wiseSaying.getId(), wiseSaying.getAuthor(), wiseSaying.getContent()));
         }
     }
 
-    private void handleRegister() { // 등록
+    void actionDelete(String cmd) {
+        int id = CmdSplitId(cmd);
+        if (id < 0) {
+            return; // ID가 유효하지 않으면 메서드 종료
+        }
+        WiseSaying wisesaying = findId(id);
+
+        if (wisesaying == null) {
+            return; // ID가 유효하지 않으면 메서드 종료
+        }
+
+        wiseSayingList.remove(wisesaying);
+    }
+    void actionModify(String cmd) {
+        int id = CmdSplitId(cmd);
+        if (id < 0) {
+            return; // ID가 유효하지 않으면 메서드 종료
+        }
+        WiseSaying wisesaying = findId(id);
+
+        if (wisesaying == null) {
+            return; // ID가 유효하지 않으면 메서드 종료
+        }
+
+        System.out.printf("명언 (기존) : %s\n", wisesaying.getContent());
         System.out.print("명언 : ");
-        String text = scanner.nextLine();
-        System.out.print("작가 : ");
-        String author = scanner.nextLine();
+        String content = scanner.nextLine().trim();
 
-        WiseSaying ws = new WiseSaying(id, text, author);
-        wiseSayings.add(ws);
-        saveWiseSayingToFile(ws);
-        saveLastId(id + 1);
+        System.out.printf("작자 (기존) : %s\n", wisesaying.getAuthor());
+        System.out.print("작자 : ");
+        String author = scanner.nextLine().trim();
 
-        System.out.println(id + "번 명언이 등록되었습니다.");
-        id++;
+        wisesaying.setAuthor(author);
+        wisesaying.setContent(content);
+
+        System.out.println("%d번 명언이 수정되었습니다.".formatted(wisesaying.getId()));
     }
 
-    private void handleList() { // 목록
-        System.out.println("번호 / 작가 / 명언");
-        System.out.println("----------------------------");
-        wiseSayings.stream()
-                .sorted((a, b) -> b.getId() - a.getId())
-                .forEach(ws -> System.out.println(ws.getId() + " / " + ws.getAuthor() + " / " + ws.getText()));
-    }
+    int CmdSplitId(String cmd) {
+        String[] deleteId = cmd.split("=");
 
-    private void handleDelete(String cmd) { // 삭제
-        int deleteId = Integer.parseInt(cmd.substring(cmd.indexOf("=") + 1));
-
-        boolean removed = wiseSayings.removeIf(e -> e.getId() == deleteId);
-        if (removed) {
-            deleteFile(deleteId);
-            System.out.println(deleteId + "번 명언이 삭제되었습니다.");
-        } else {
-            System.out.println(deleteId + "번 명언이 존재하지 않습니다.");
+        if(deleteId.length < 2 || deleteId[1].isEmpty()) {
+            System.out.println("ID를 입력해주세요");
+            return -1;
         }
+
+        return Integer.parseInt(deleteId[1]);
     }
 
-    private void handleUpdate(String cmd) { // 수정
-        int updateId = Integer.parseInt(cmd.substring(cmd.indexOf("=") + 1));
-
-        Optional<WiseSaying> opt = wiseSayings.stream()
-                .filter(e -> e.getId() == updateId)
-                .findFirst();
-
-        if (opt.isPresent()) {
-            WiseSaying ws = opt.get();
-
-            System.out.println("명언(기존) : " + ws.getText());
-            System.out.print("명언 : ");
-            String newText = scanner.nextLine();
-
-            System.out.println("작가(기존) : " + ws.getAuthor());
-            System.out.print("작가 : ");
-            String newAuthor = scanner.nextLine();
-
-            ws.setText(newText);
-            ws.setAuthor(newAuthor);
-
-            saveWiseSayingToFile(ws);
-            System.out.println(updateId + "번 명언이 수정되었습니다.");
-        } else {
-            System.out.println(updateId + "번 명언이 존재하지 않습니다.");
-        }
-    }
-
-    private void handleBuild() {
-        buildDataFile(wiseSayings);
-    }
-
-    // ======= 아래는 기존 static 메서드들 그대로 유지 =======
-
-    static void saveWiseSayingToFile(WiseSaying ws) {
-        try {
-            Files.createDirectories(Paths.get(DB_DIR));
-            String json = "{\n" +
-                    "  \"id\": " + ws.getId() + ",\n" +
-                    "  \"text\": \"" + escape(ws.getText()) + "\",\n" +
-                    "  \"author\": \"" + escape(ws.getAuthor()) + "\"\n" +
-                    "}";
-            Files.writeString(Paths.get(DB_DIR, ws.getId() + ".json"), json);
-        } catch (IOException e) {
-            System.out.println("파일 저장 오류: " + e.getMessage());
-        }
-    }
-
-    static void deleteFile(int id) {
-        try {
-            Path filePath = Paths.get(DB_DIR, id + ".json");
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            System.out.println("파일 삭제 오류: " + e.getMessage());
-        }
-    }
-
-    static void saveLastId(int lastId) {
-        try {
-            Files.createDirectories(Paths.get(DB_DIR));
-            Files.writeString(Paths.get(DB_DIR, "lastId.txt"), String.valueOf(lastId));
-        } catch (IOException e) {
-            System.out.println("lastId 저장 오류: " + e.getMessage());
-        }
-    }
-
-    static int loadLastId() {
-        try {
-            Path path = Paths.get(DB_DIR, "lastId.txt");
-            if (Files.exists(path)) {
-                return Integer.parseInt(Files.readString(path).trim());
-            }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("lastId 불러오기 실패. 기본값 1 사용");
-        }
-        return 1;
-    }
-
-    static List<WiseSaying> loadAllWiseSayings() {
-        List<WiseSaying> result = new ArrayList<>();
-        try {
-            Files.createDirectories(Paths.get(DB_DIR));
-            DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(DB_DIR), "*.json");
-
-            for (Path path : stream) {
-                WiseSaying ws = loadWiseSayingFromFile(path);
-                if (ws != null) result.add(ws);
-            }
-        } catch (IOException e) {
-            System.out.println("명언 불러오기 실패: " + e.getMessage());
-        }
-        return result;
-    }
-
-    static WiseSaying loadWiseSayingFromFile(Path path) {
-        try {
-            List<String> lines = Files.readAllLines(path);
-            int id = 0;
-            String text = "", author = "";
-            for (String line : lines) {
-                line = line.trim();
-                if (line.startsWith("\"id\"")) {
-                    id = Integer.parseInt(line.split(":")[1].trim().replace(",", ""));
-                } else if (line.startsWith("\"text\"")) {
-                    text = line.split(":")[1].trim().replaceAll("^\"|\",?$", "");
-                } else if (line.startsWith("\"author\"")) {
-                    author = line.split(":")[1].trim().replaceAll("^\"|\",?$", "");
-                }
-            }
-            return new WiseSaying(id, text, author);
-        } catch (Exception e) {
-            System.out.println("파일 파싱 오류 (" + path.getFileName() + ")");
-            return null;
-        }
-    }
-
-    static void buildDataFile(List<WiseSaying> wiseSayings) {
-        try {
-            Files.createDirectories(Paths.get(DB_DIR));
-            Path filePath = Paths.get(DB_DIR, "data.json");
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("[\n");
-
-            for (int i = 0; i < wiseSayings.size(); i++) {
-                WiseSaying ws = wiseSayings.get(i);
-                sb.append("  {\n");
-                sb.append("    \"id\": ").append(ws.getId()).append(",\n");
-                sb.append("    \"text\": \"").append(escape(ws.getText())).append("\",\n");
-                sb.append("    \"author\": \"").append(escape(ws.getAuthor())).append("\"\n");
-                sb.append("  }");
-
-                if (i < wiseSayings.size() - 1) {
-                    sb.append(",");
-                }
-                sb.append("\n");
+    WiseSaying findId(int id) {
+        WiseSaying wiseSaying = null;
+        for (int i = 0; i < wiseSayingList.size(); i++) {
+            if(wiseSayingList.get(i).getId() == id){
+                wiseSaying = wiseSayingList.get(i);
             }
 
-            sb.append("]");
-            Files.writeString(filePath, sb.toString());
-            System.out.println("data.json 파일이 생성되었습니다.");
-        } catch (IOException e) {
-            System.out.println("data.json 생성 실패: " + e.getMessage());
+            if(wiseSaying == null) {
+                System.out.println(id + "번 명언이 존재하지 않습니다.");
+                return null;
+            }
         }
-    }
-
-    static String escape(String s) {
-        return s.replace("\"", "\\\"");
+        return wiseSaying;
     }
 }
-
