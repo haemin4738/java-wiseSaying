@@ -1,49 +1,33 @@
 package org.example;
 
 public class WiseSaying {
-    private int id;
+    private final  int id;
     private String author;
     private String content;
 
-    WiseSaying(int id, String author, String content) {
+    public WiseSaying (int id, String author, String content) {
         this.id = id;
         this.author = author;
         this.content = content;
     }
 
-    int getId(){
-        return id;
+    public int getId() {
+        return this.id;
     }
 
-    String getAuthor() {
-        return author;
+    public String getAuthor() {
+        return this.author;
     }
 
-    String getContent() {
-        return content;
+    public String getContent() {
+        return this.content;
     }
 
-    void setId(int id){
-        this.id = id;
-    }
-
-    void setAuthor(String author){
+    public void setAuthor(String author) {
         this.author = author;
     }
 
-    void setContent(String content){
+    public void setContent(String content) {
         this.content = content;
-    }
-
-    public String toJson() {
-        return "{\"id\":" + id + ",\"author\":\"" + author + "\",\"content\":\"" + content + "\"}";
-    }
-
-    public static WiseSaying fromJson(String json) {
-        String[] parts = json.replace("{", "").replace("}", "").replace("\"", "").split(",");
-        int wsId = Integer.parseInt(parts[0].split(":")[1]);
-        String author = parts[1].split(":")[1];
-        String content = parts[2].split(":")[1];
-        return new WiseSaying(wsId, author, content);
     }
 }
