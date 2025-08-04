@@ -1,33 +1,39 @@
 package com.back.domain.wiseSaying.entity;
 
 public class WiseSaying {
-    private final  int id;
-    private String author;
+    private int id;
     private String content;
+    private String author;
 
-    public WiseSaying (int id, String author, String content) {
-        this.id = id;
-        this.author = author;
+    public WiseSaying() {
+    }
+
+    public WiseSaying(String content, String author) {
         this.content = content;
+        this.author = author;
     }
 
     public int getId() {
-        return this.id;
+        return id;
     }
 
-    public String getAuthor() {
-        return this.author;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getContent() {
-        return this.content;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
+        return content;
     }
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

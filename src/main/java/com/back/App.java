@@ -1,34 +1,40 @@
 package com.back;
 
+import com.back.domain.AppContext;
 import com.back.domain.system.controller.SystemController;
 import com.back.domain.wiseSaying.controller.WiseSayingController;
 
 import java.util.Scanner;
 
 public class App {
-    private  final Scanner scanner = new Scanner(System.in);
+    public void run() {
+        Scanner sc = AppContext.scanner;
+        WiseSayingController wiseSayingController = AppContext.wiseSayingController;
+        SystemController systemController = AppContext.systemController;
 
-    void run() {
         System.out.println("== 명언 앱 ==");
 
-        SystemController systemController = new SystemController();
-        WiseSayingController wiseSayingController = new WiseSayingController(scanner);
-
-        while (true) {
+        boolean running = true;
+        while (running) {
             System.out.print("명령) ");
-            String cmd = scanner.nextLine().trim();
+            String command = sc.nextLine().trim();
 
-            Rq rq = new Rq(cmd);
-
-            switch (rq.getActionName()) {
-                case "종료" -> {
-                    systemController.actionExit();
-                    return;
+            switch (command) {
+                case "종료" -> running = false;
+                case "등록" -> wiseSayingController.write();
+                default -> {
+                    if (command.startsWith("삭제")) {
+                        wiseSayingController.remove(command);
+                    } else if (command.startsWith("수정")) {
+                        wiseSayingController.modify(command);
+                    } else if (command.startsWith("목록")) {
+                        wiseSayingController.list(command);
+                    } else if (command.equals("빌드")) {
+                        wiseSayingController.build();
+                    } else {
+                        systemController.unknown(command);
+                    }
                 }
-                case "등록" -> wiseSayingController.actionWrite();
-                case "목록" ->  wiseSayingController.actionList();
-                case "삭제" -> wiseSayingController.actionDelete(rq);
-                case "수정" -> wiseSayingController.actionModify(rq);
             }
         }
     }

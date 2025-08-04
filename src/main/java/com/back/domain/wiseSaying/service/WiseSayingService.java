@@ -6,32 +6,41 @@ import com.back.domain.wiseSaying.repository.WiseSayingRepository;
 import java.util.List;
 
 public class WiseSayingService {
-    private final WiseSayingRepository wiseSayingRepository;
+    private final WiseSayingRepository repository;
 
-    public WiseSayingService() {
-        this.wiseSayingRepository = new WiseSayingRepository();
+    // 생성자: Repository 주입
+    public WiseSayingService(WiseSayingRepository repository) {
+        this.repository = repository;
     }
 
-    public List<WiseSaying> getWiseSayingList() {
-        return this.wiseSayingRepository.getWiseSayingList();
+    // 명언 등록
+    public WiseSaying add(String content, String author) {
+        WiseSaying ws = new WiseSaying(content, author);
+        return repository.save(ws);
     }
 
-    public void delete(WiseSaying wiseSaying) {
-        this.wiseSayingRepository.delete(wiseSaying);
+    // 명언 조회
+    public WiseSaying getById(int id) {
+        return repository.findById(id);
     }
 
-    public void modify(WiseSaying wiseSaying, String content, String author) {
-        this.wiseSayingRepository.modify(wiseSaying, content, author);
+    // 명언 삭제
+    public boolean removeById(int id) {
+        return repository.deleteById(id);
     }
 
-    public WiseSaying findById(int id) {
-        return this.wiseSayingRepository.findById(id);
+    // 명언 수정
+    public void modify(int id, String content, String author) {
+        repository.update(id, content, author);
     }
 
-    public WiseSaying write(String author, String content) {
+    // 전체 명언 목록
+    public List<WiseSaying> getAll() {
+        return repository.findAll();
+    }
 
-        WiseSaying wiseSaying  = this.wiseSayingRepository.write(author, content);
-
-        return wiseSaying;
+    // data.json 빌드
+    public void buildDataJson() {
+        repository.saveToDataJson();
     }
 }
